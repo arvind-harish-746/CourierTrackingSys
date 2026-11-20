@@ -1,0 +1,29 @@
+# compiled class files
+*.class
+
+# package files
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# build output
+bin/
+target/
+build/
+out/
+
+# ide specific files
+.idea/
+*.iml
+.project
+.classpath
+.settings/
+.vscode/
+
+# os generated files
+.DS_Store
+Thumbs.db
