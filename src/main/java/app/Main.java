@@ -3,6 +3,7 @@ package app;
 import java.util.*;
 import model.Agent;
 import model.Parcel;
+import model.StatusUpdate;
 import service.ParcelService;
 import service.BookingService;
 import service.AgentService;
@@ -10,6 +11,7 @@ import service.TrackingService;
 import util.IdGenerator;
 import exceptions.InvalidParcelException;
 import exceptions.NoAgentAvailableException;
+import exceptions.InvalidStatusTransitionException;
 
 // main application terminal entry point
 public class Main {
@@ -49,13 +51,9 @@ public class Main {
                     double wt = -1;
                     while (wt <= 0) {
                         System.out.print("enter parcel weight in kg: ");
-                        try {
-                            wt = Double.parseDouble(sc.nextLine().trim());
-                            if (wt <= 0) {
-                                System.out.println("weight must be greater than zero");
-                            }
-                        } catch (Exception e) {
-                            System.out.println("invalid number please enter positive weight");
+                        wt = sc.nextInt();
+                        if (wt <= 0) {
+                            System.out.println("weight must be greater than zero");
                         }
                     }
                     Parcel p = bs.bookParcel(snd, rcv, wt);
@@ -66,12 +64,8 @@ public class Main {
                     // handle parcel cancellation
                     System.out.print("enter parcel id to cancel: ");
                     String cpid = sc.nextLine().trim();
-                    try {
-                        bs.cancelParcel(cpid);
-                        System.out.println("parcel " + cpid + " cancelled successfully");
-                    } catch (InvalidParcelException e) {
-                        System.out.println("cancellation failed: " + e.getMessage());
-                    }
+                    bs.cancelParcel(cpid);
+                    System.out.println("parcel " + cpid + " cancelled successfully");
                     break;
 
                 case 3:
@@ -88,14 +82,51 @@ public class Main {
                     break;
 
                 case 4:
-                    System.out.println("status update selected");
+                    // handle parcel status update
+                    System.out.print("enter parcel id to update: ");
+                    String upid = sc.nextLine().trim();
+                    Parcel upParcel = ps.getParcel(upid);
+                    if (upParcel == null) {
+                        System.out.println("parcel not found with id: " + upid);
+                        break;
+                    }
+                    System.out.println("current status: " + upParcel.getStatus());
+                    System.out.println("lifecycle: Booked -> Picked Up -> In Transit -> Out for Delivery -> Delivered");
+                    System.out.print("enter target status: ");
+                    String nstat = sc.nextLine().trim();
+                    ts.updateStatus(upid, nstat);
+                    System.out.println("status updated successfully to: " + upParcel.getStatus());
                     break;
 
                 case 5:
-                    System.out.println("tracking history selected");
+                    // handle tracking history viewing
+                    System.out.print("enter parcel id to view history: ");
+                    String hpid = sc.nextLine().trim();
+                    Parcel hParcel = ps.getParcel(hpid);
+                    if (hParcel == null) {
+                        System.out.println("parcel not found with id: " + hpid);
+                        break;
+                    }
+                    System.out.println("\n--- parcel details ---");
+                    System.out.println("id: " + hParcel.getId());
+                    System.out.println("sender: " + hParcel.getSender() + " | receiver: " + hParcel.getReceiver());
+                    System.out.println("weight: " + hParcel.getWeight() + " kg | status: " + hParcel.getStatus());
+                    String aid = hParcel.getAssignedAgentId();
+                    System.out.println("assigned agent: " + (aid != null ? aid : "unassigned"));
+                    System.out.println("\n--- tracking audit history ---");
+                    List<StatusUpdate> history = ts.getHistory(hpid);
+                    if (history.isEmpty()) {
+                        System.out.println("no tracking updates found");
+                    } else {
+                        for (int i = 0; i < history.size(); i++) {
+                            StatusUpdate su = history.get(i);
+                            System.out.println((i + 1) + ". [" + su.getTimestamp() + "] " + su.getStatus());
+                        }
+                    }
                     break;
 
                 case 6:
+                    // exit application
                     System.out.println("exiting system goodbye");
                     run = false;
                     break;
