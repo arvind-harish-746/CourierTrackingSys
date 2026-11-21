@@ -40,7 +40,13 @@ public class Main {
             System.out.print("enter choice: ");
 
             int ch = -1;
-            ch = sc.nextInt();
+            try {
+                ch = Integer.parseInt(sc.nextLine().trim());
+            } catch (Exception e) {
+                System.out.println("invalid input please enter a number");
+                continue;
+            }
+
             switch (ch) {
                 case 1:
                     // handle parcel booking
@@ -51,9 +57,13 @@ public class Main {
                     double wt = -1;
                     while (wt <= 0) {
                         System.out.print("enter parcel weight in kg: ");
-                        wt = sc.nextInt();
-                        if (wt <= 0) {
-                            System.out.println("weight must be greater than zero");
+                        try {
+                            wt = Double.parseDouble(sc.nextLine().trim());
+                            if (wt <= 0) {
+                                System.out.println("weight must be greater than zero");
+                            }
+                        } catch (Exception e) {
+                            System.out.println("invalid weight please enter positive number");
                         }
                     }
                     Parcel p = bs.bookParcel(snd, rcv, wt);
@@ -64,8 +74,12 @@ public class Main {
                     // handle parcel cancellation
                     System.out.print("enter parcel id to cancel: ");
                     String cpid = sc.nextLine().trim();
-                    bs.cancelParcel(cpid);
-                    System.out.println("parcel " + cpid + " cancelled successfully");
+                    try {
+                        bs.cancelParcel(cpid);
+                        System.out.println("parcel " + cpid + " cancelled successfully");
+                    } catch (InvalidParcelException e) {
+                        System.out.println("cancellation failed: " + e.getMessage());
+                    }
                     break;
 
                 case 3:
@@ -77,8 +91,12 @@ public class Main {
                         System.out.println("parcel not found with id: " + apid);
                         break;
                     }
-                    Agent ag = as.assignParcelToAgent(apid);
-                    System.out.println("assigned to agent: " + ag.getName() + " (" + ag.getId() + ")");
+                    try {
+                        Agent ag = as.assignParcelToAgent(apid);
+                        System.out.println("assigned to agent: " + ag.getName() + " (" + ag.getId() + ")");
+                    } catch (NoAgentAvailableException e) {
+                        System.out.println("assignment failed: " + e.getMessage());
+                    }
                     break;
 
                 case 4:
@@ -94,8 +112,14 @@ public class Main {
                     System.out.println("lifecycle: Booked -> Picked Up -> In Transit -> Out for Delivery -> Delivered");
                     System.out.print("enter target status: ");
                     String nstat = sc.nextLine().trim();
-                    ts.updateStatus(upid, nstat);
-                    System.out.println("status updated successfully to: " + upParcel.getStatus());
+                    try {
+                        ts.updateStatus(upid, nstat);
+                        System.out.println("status updated successfully to: " + upParcel.getStatus());
+                    } catch (InvalidStatusTransitionException e) {
+                        System.out.println("transition rejected: " + e.getMessage());
+                    } catch (InvalidParcelException e) {
+                        System.out.println("update failed: " + e.getMessage());
+                    }
                     break;
 
                 case 5:
