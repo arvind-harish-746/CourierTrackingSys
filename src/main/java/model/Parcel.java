@@ -71,4 +71,9 @@ public class Parcel {
     public void setAssignedAgentId(String aid) {
         this.assignedAgentId = aid;
     }
+
+    @Override
+    public String toString() {
+        return "parcel id: " + id + " | sender: " + sender + " | receiver: " + receiver + " | weight: " + weight + " kg | status: " + status + " | agent: " + (assignedAgentId != null ? assignedAgentId : "unassigned");
+    }
 }

@@ -7,6 +7,7 @@ a terminal-based courier and parcel tracking system built in java using scanner 
 2. delivery agent assignment (using a custom fifo queue built from scratch)
 3. status updates enforcing lifecycle: Booked -> Picked Up -> In Transit -> Out for Delivery -> Delivered
 4. tracking history
+5. view all booked parcels and registered delivery agents
 
 ## project structure
 ```
