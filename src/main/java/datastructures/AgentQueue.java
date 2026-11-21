@@ -41,10 +41,10 @@ public class AgentQueue {
         size++;
     }
 
-    // removes and returns the agent at front of queue
-    public Agent dequeue() throws NoAgentAvailableException {
+    // removes and returns the agent at front of queue, or null if empty
+    public Agent dequeue() {
         if (isEmpty()) {
-            throw new NoAgentAvailableException("no agents currently available in queue");
+            return null;
         }
         Agent a = head.data;
         head = head.next;

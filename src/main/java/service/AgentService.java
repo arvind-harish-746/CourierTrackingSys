@@ -25,15 +25,18 @@ public class AgentService {
     }
 
     // assigns next available agent to parcel using fifo queue
-    public Agent assignParcelToAgent(String pid) throws NoAgentAvailableException {
+    public Agent assignParcelToAgent(String pid) {
         if (agentQueue.isEmpty()) {
-            throw new NoAgentAvailableException("no delivery agents available in queue");
+            return null;
         }
         Parcel p = parcelService.getParcel(pid);
         if (p == null) {
             return null;
         }
         Agent a = agentQueue.dequeue();
+        if (a == null) {
+            return null;
+        }
         p.setAssignedAgentId(a.getId());
         a.setCurrentLoad(a.getCurrentLoad() + 1);
         agentQueue.enqueue(a);

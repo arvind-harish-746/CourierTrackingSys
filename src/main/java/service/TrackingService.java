@@ -17,11 +17,28 @@ public class TrackingService {
         this.historyMap = new HashMap<>();
     }
 
+    // records the initial booking event at the time of creation
+    public void recordInitialBooking(String pid) {
+        List<StatusUpdate> list = new ArrayList<>();
+        list.add(new StatusUpdate("Booked", new Date().toString()));
+        historyMap.put(pid, list);
+    }
+
     // validates and updates status enforcing strict sequential order
-    public void updateStatus(String pid, String nextStatus) throws InvalidStatusTransitionException, InvalidParcelException {
+    public boolean updateStatus(String pid, String nextStatus) {
         Parcel p = parcelService.getParcel(pid);
         if (p == null) {
-            throw new InvalidParcelException("parcel not found with id " + pid);
+            System.out.println("status update failed: parcel not found with id " + pid);
+            return false;
+        }
+
+        if (p.getStatus().equalsIgnoreCase("Delivered")) {
+            System.out.println("invalid status transition: parcel has already been delivered");
+            return false;
+        }
+        if (p.getStatus().equalsIgnoreCase("Cancelled")) {
+            System.out.println("invalid status transition: parcel is cancelled");
+            return false;
         }
 
         int currIdx = -1;
@@ -41,13 +58,21 @@ public class TrackingService {
         }
 
         if (currIdx == -1) {
-            throw new InvalidStatusTransitionException("current status " + p.getStatus() + " cannot be transitioned");
+            System.out.println("invalid status transition: current status " + p.getStatus() + " cannot be transitioned");
+            return false;
         }
+
         if (nextIdx == -1) {
-            throw new InvalidStatusTransitionException("invalid status target " + nextStatus);
+            System.out.println("invalid status target: '" + nextStatus + "'. Valid options are: Picked Up, In Transit, Out for Delivery, Delivered");
+            return false;
         }
+
         if (nextIdx != currIdx + 1) {
-            throw new InvalidStatusTransitionException("cannot transition from " + p.getStatus() + " to " + nextStatus);
+            System.out.println("invalid status transition: sequence order is wrong. Cannot transition from " + p.getStatus() + " to " + nextStatus);
+            if (currIdx + 1 < lifecycle.length) {
+                System.out.println("next expected status in sequence is: " + lifecycle[currIdx + 1]);
+            }
+            return false;
         }
 
         List<StatusUpdate> list = historyMap.get(pid);
@@ -59,6 +84,8 @@ public class TrackingService {
 
         p.setStatus(lifecycle[nextIdx]);
         list.add(new StatusUpdate(lifecycle[nextIdx], new Date().toString()));
+        System.out.println("status updated successfully to: " + p.getStatus());
+        return true;
     }
 
     // retrieves tracking history list for a parcel

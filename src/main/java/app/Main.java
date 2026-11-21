@@ -12,12 +12,12 @@ import util.IdGenerator;
 
 // main application terminal entry point
 public class Main {
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
         ParcelService ps = new ParcelService();
-        BookingService bs = new BookingService(ps);
-        AgentService as = new AgentService(ps);
         TrackingService ts = new TrackingService(ps);
+        BookingService bs = new BookingService(ps, ts);
+        AgentService as = new AgentService(ps);
 
         // seed initial delivery agents
         as.registerAgent(new Agent(IdGenerator.generateAgentId(), "John Doe", "9876543210"));
@@ -38,17 +38,36 @@ public class Main {
             System.out.println("8. exit");
             System.out.print("enter choice: ");
 
-            int ch = Integer.parseInt(sc.nextLine().trim());
+            String line = sc.nextLine().trim();
+            if (!line.matches("\\d+")) {
+                System.out.println("invalid choice please enter a number between 1 and 8");
+                continue;
+            }
+
+            int ch = Integer.parseInt(line);
 
             switch (ch) {
                 case 1:
                     // handle parcel booking
                     System.out.print("enter sender name: ");
                     String snd = sc.nextLine().trim();
+                    if (snd.isEmpty()) {
+                        System.out.println("sender name cannot be empty");
+                        break;
+                    }
                     System.out.print("enter receiver name: ");
                     String rcv = sc.nextLine().trim();
+                    if (rcv.isEmpty()) {
+                        System.out.println("receiver name cannot be empty");
+                        break;
+                    }
                     System.out.print("enter parcel weight in kg: ");
-                    double wt = Double.parseDouble(sc.nextLine().trim());
+                    String wtStr = sc.nextLine().trim();
+                    if (!wtStr.matches("\\d+(\\.\\d+)?") || Double.parseDouble(wtStr) <= 0) {
+                        System.out.println("invalid weight: must be a positive number");
+                        break;
+                    }
+                    double wt = Double.parseDouble(wtStr);
                     Parcel p = bs.bookParcel(snd, rcv, wt);
                     System.out.println("parcel booked successfully with id: " + p.getId());
                     break;
@@ -58,7 +77,6 @@ public class Main {
                     System.out.print("enter parcel id to cancel: ");
                     String cpid = sc.nextLine().trim();
                     bs.cancelParcel(cpid);
-                    System.out.println("parcel " + cpid + " cancelled successfully");
                     break;
 
                 case 3:
@@ -70,8 +88,16 @@ public class Main {
                         System.out.println("parcel not found with id: " + apid);
                         break;
                     }
+                    if (target.getAssignedAgentId() != null) {
+                        System.out.println("parcel " + apid + " is already assigned to agent: " + target.getAssignedAgentId());
+                        break;
+                    }
                     Agent ag = as.assignParcelToAgent(apid);
-                    System.out.println("assigned to agent: " + ag.getName() + " (" + ag.getId() + ")");
+                    if (ag == null) {
+                        System.out.println("assignment failed: no delivery agents available in queue");
+                    } else {
+                        System.out.println("assigned to agent: " + ag.getName() + " (" + ag.getId() + ")");
+                    }
                     break;
 
                 case 4:
@@ -88,7 +114,6 @@ public class Main {
                     System.out.print("enter target status: ");
                     String nstat = sc.nextLine().trim();
                     ts.updateStatus(upid, nstat);
-                    System.out.println("status updated successfully to: " + upParcel.getStatus());
                     break;
 
                 case 5:
@@ -149,7 +174,7 @@ public class Main {
 
                 case 8:
                     // exit application
-                    System.out.println("exiting system goodbye");
+                    System.out.println("exiting system, goodbye.");
                     run = false;
                     break;
 

@@ -27,3 +27,7 @@ out/
 # os generated files
 .DS_Store
 Thumbs.db
+
+# artifacts & presentation documentation
+presentation_logic_concept_guide.md
+courier_tracking_theoretical_concepts.md
